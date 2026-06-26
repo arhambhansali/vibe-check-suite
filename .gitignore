@@ -1,0 +1,19 @@
+# Python bytecode environment assets
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# Local virtual environments
+venv/
+.venv/
+env/
+
+# IDE / Code Editor configuration files
+.vscode/
+.idea/
+.DS_Store
+
+# Local testing logs or exports
+*.log
+report.html
