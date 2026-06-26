@@ -1,0 +1,26 @@
+[build-system]
+requires = ["setuptools>=68.0", "wheel"]
+build-backend = "setuptools.backends.legacy:build"
+
+[project]
+name = "vibe-check-suite"
+version = "0.1.0"
+description = "A QA and security posture analyzer for auditing configuration management, error-handling, and cryptographic standards in modern web applications."
+readme = "README.md"
+requires-python = ">=3.9"
+license = { text = "MIT" }
+keywords = ["security", "audit", "configuration", "web", "cli"]
+dependencies = [
+    "click>=8.1.7",
+    "rich>=13.7.1",
+    "requests>=2.32.3",
+    "PyJWT>=2.8.0",
+    "colorama>=0.4.6",
+]
+
+[project.scripts]
+vibecheck = "scanner.cli:main"
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["scanner*"]
