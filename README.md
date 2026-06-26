@@ -59,9 +59,3 @@ python -m scanner.cli scan --url http://localhost:3000
 ## ⚠️ Disclaimer
 
 This suite is intended strictly for authorized white-hat auditing, local defensive validation, and security research. Running offensive probing actions against infrastructure without explicit, prior written consent is illegal.
-
-```
-
-Save this completely fresh overwrite, push it through GitHub Desktop, and look at the browser. This flat structure cannot collapse on itself!
-
-```
