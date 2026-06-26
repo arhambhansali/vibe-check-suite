@@ -1,4 +1,3 @@
-```text
 # VibeCheck
 
 A modular, lightweight dynamic application security testing (DAST) framework designed for fast configuration audits, parameter probing, and cryptographic exposure checks against web environments.
