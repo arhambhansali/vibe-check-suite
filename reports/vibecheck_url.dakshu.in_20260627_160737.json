@@ -1,0 +1,19 @@
+{
+  "target_url": "https://url.dakshu.in",
+  "timestamp": "2026-06-27 16:07:31",
+  "modules_run": [
+    "jwt_crack"
+  ],
+  "stats": {
+    "jwt_tokens_found": 0,
+    "jwt_tokens_cracked": 0
+  },
+  "summary": {
+    "CRITICAL": 0,
+    "HIGH": 0,
+    "MEDIUM": 0,
+    "LOW": 0,
+    "INFO": 0
+  },
+  "findings": []
+}

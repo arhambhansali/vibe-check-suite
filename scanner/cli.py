@@ -2,7 +2,6 @@ import click
 from rich.console import Console
 from rich.panel import Panel
 from rich.text import Text
-from rich.prompt import Confirm
 from rich import box
 from rich.table import Table
 from scanner.core_spider import CoreSpider
@@ -10,22 +9,25 @@ from scanner.jwt_crack import JWTCracker
 from scanner.abuse_test import AbuseTester
 from scanner.headers_audit import HeadersAuditor
 from scanner.secret_scan import SecretScanner
+from scanner.injection_surface import InjectionScanner
+from scanner.reporter import Reporter
 
 console = Console()
 
 ASCII_ART = r"""
  __   _____ ___  ___  ___ _  _ ___ ___ _  __
  \ \ / /_ _| _ )| __|/ __| || | __/ __| |/ /
-  \ V / | || _ \| _|| (__| __ | _| (__| ' < 
+  \ V / | || _ \| _|| (__| __ | _| (__| ' 
    \_/ |___|___/|___|\__|_||_|___|\___|_|\_\
 """
 
 MODULES = {
-    "1": ("core_spider",   "Endpoint & Form Mapper"),
-    "2": ("jwt_crack",     "JWT Signature Auditor"),
-    "3": ("abuse_test",    "Rate-Limit & Error-Leak Prober"),
-    "4": ("headers_audit", "Security Headers & Path Exposure"),
-    "5": ("secret_scan",   "Secret & API Key Scanner"),
+    "1": ("core_spider",        "Endpoint & Form Mapper"),
+    "2": ("jwt_crack",          "JWT Signature Auditor"),
+    "3": ("abuse_test",         "Rate-Limit & Error-Leak Prober"),
+    "4": ("headers_audit",      "Security Headers & Path Exposure"),
+    "5": ("secret_scan",        "Secret & API Key Scanner"),
+    "6": ("injection_surface",  "SQLi, XSS & Template Injection"),
 }
 
 
@@ -50,8 +52,8 @@ def print_module_table() -> None:
         show_header=True,
         header_style="bold cyan",
     )
-    table.add_column("#",       width=4,  style="bold cyan")
-    table.add_column("Module",  width=16, style="bold white")
+    table.add_column("#",          width=4,  style="bold cyan")
+    table.add_column("Module",     width=20, style="bold white")
     table.add_column("Description")
 
     for num, (mod, desc) in MODULES.items():
@@ -61,7 +63,6 @@ def print_module_table() -> None:
 
 
 def select_modules() -> list[str]:
-    """Prompt the user to select which modules to run."""
     console.print("\n[bold cyan]Available Modules:[/bold cyan]")
     print_module_table()
 
@@ -84,7 +85,7 @@ def select_modules() -> list[str]:
             console.print(f"  [yellow]  ⚠ Unknown module '{key}' — skipped[/yellow]")
 
     if not selected:
-        console.print("  [yellow]  No valid modules selected — running all.[/yellow]\n")
+        console.print("  [yellow]  No valid selection — running all.[/yellow]\n")
         return list(MODULES.keys())
 
     console.print(
@@ -127,50 +128,68 @@ def scan(url: str, run_all: bool, routes: str) -> None:
     console.print(
         f"\n[bold green]>[/bold green] Starting VibeCheck Audit Engine...\n"
     )
-    console.print(f"  [dim]Target :[/dim]  [bold yellow]{url}[/bold yellow]")
+    console.print(f"  [dim]Target  :[/dim]  [bold yellow]{url}[/bold yellow]")
 
-    # ── Module selection ──────────────────────────────────────────────────────
     if run_all:
         selected = list(MODULES.keys())
-        console.print(f"  [dim]Modules :[/dim]  [bold cyan]All (--all flag)[/bold cyan]\n")
+        console.print(
+            f"  [dim]Modules :[/dim]  [bold cyan]All (--all flag)[/bold cyan]\n"
+        )
     else:
         selected = select_modules()
 
     extra_routes = [r.strip() for r in routes.split(",") if r.strip()]
 
+    # ── Reporter init ─────────────────────────────────────────────────────────
+    reporter = Reporter(url)
+
     # ── Shared state ──────────────────────────────────────────────────────────
     crawl_result = None
+    pages        = [url]
 
     # ── Phase 2: Core Spider ──────────────────────────────────────────────────
     if "1" in selected:
-        spider = CoreSpider(url)
+        spider       = CoreSpider(url)
         crawl_result = spider.run()
-
-    pages = crawl_result.pages_visited if crawl_result else [url]
+        pages        = crawl_result.pages_visited or [url]
+        reporter.ingest_spider(crawl_result)
 
     # ── Phase 3: JWT Auditor ──────────────────────────────────────────────────
     if "2" in selected:
-        jwt_auditor = JWTCracker(url, pages=pages)
-        jwt_auditor.run()
+        jwt_auditor  = JWTCracker(url, pages=pages)
+        jwt_result   = jwt_auditor.run()
+        reporter.ingest_jwt(jwt_result)
 
     # ── Phase 4: Abuse Tester ─────────────────────────────────────────────────
     if "3" in selected:
-        abuse = AbuseTester(url, extra_routes=extra_routes or ["/dashboard"])
-        abuse.run()
+        abuse        = AbuseTester(url, extra_routes=extra_routes or ["/dashboard"])
+        abuse_result = abuse.run()
+        reporter.ingest_abuse(abuse_result)
 
     # ── Phase 5: Headers Auditor ──────────────────────────────────────────────
     if "4" in selected:
-        headers = HeadersAuditor(url)
-        headers.run()
+        headers        = HeadersAuditor(url)
+        headers_result = headers.run()
+        reporter.ingest_headers(headers_result)
 
     # ── Phase 6: Secret Scanner ───────────────────────────────────────────────
     if "5" in selected:
-        secrets = SecretScanner(url, pages=pages)
-        secrets.run()
+        secrets        = SecretScanner(url, pages=pages)
+        secrets_result = secrets.run()
+        reporter.ingest_secrets(secrets_result)
 
-    console.print(
-        "\n[bold green]✓[/bold green] [bold]VibeCheck audit complete.[/bold]\n"
-    )
+    # ── Phase 7: Injection Scanner ────────────────────────────────────────────
+    if "6" in selected:
+        injection        = InjectionScanner(
+            url,
+            pages=pages,
+            forms=crawl_result.forms if crawl_result else [],
+        )
+        injection_result = injection.run()
+        reporter.ingest_injection(injection_result)
+
+    # ── Phase 8: Reporter ─────────────────────────────────────────────────────
+    reporter.finalize()
 
 
 if __name__ == "__main__":

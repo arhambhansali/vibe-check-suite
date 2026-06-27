@@ -1,0 +1,81 @@
+{
+  "target_url": "https://url.dakshu.in",
+  "timestamp": "2026-06-27 15:46:56",
+  "modules_run": [
+    "core_spider",
+    "jwt_crack",
+    "abuse_test",
+    "headers_audit",
+    "secret_scan",
+    "injection_surface"
+  ],
+  "stats": {
+    "pages_crawled": 1,
+    "forms_found": 0,
+    "jwt_tokens_found": 0,
+    "jwt_tokens_cracked": 0,
+    "abuse_endpoints_tested": 7,
+    "paths_probed": 84,
+    "exposed_paths": 0,
+    "secrets_found": 0,
+    "js_bundles": 2,
+    "injection_params_tested": 13
+  },
+  "summary": {
+    "CRITICAL": 0,
+    "HIGH": 5,
+    "MEDIUM": 0,
+    "LOW": 1,
+    "INFO": 0
+  },
+  "findings": [
+    {
+      "module": "abuse_test",
+      "severity": "HIGH",
+      "finding_type": "rate_limit",
+      "detail": "No 429/403 after 15 rapid login attempts.",
+      "evidence": "Status codes returned: [405]",
+      "url": "https://url.dakshu.in/login"
+    },
+    {
+      "module": "abuse_test",
+      "severity": "HIGH",
+      "finding_type": "rate_limit",
+      "detail": "No 429/403 after 15 rapid login attempts.",
+      "evidence": "Status codes returned: [405]",
+      "url": "https://url.dakshu.in/signin"
+    },
+    {
+      "module": "abuse_test",
+      "severity": "HIGH",
+      "finding_type": "rate_limit",
+      "detail": "No 429/403 after 15 rapid login attempts.",
+      "evidence": "Status codes returned: [401]",
+      "url": "https://url.dakshu.in/api/auth/login"
+    },
+    {
+      "module": "abuse_test",
+      "severity": "HIGH",
+      "finding_type": "rate_limit",
+      "detail": "No 429/403 after 15 rapid login attempts.",
+      "evidence": "Status codes returned: [405]",
+      "url": "https://url.dakshu.in/auth/login"
+    },
+    {
+      "module": "abuse_test",
+      "severity": "HIGH",
+      "finding_type": "rate_limit",
+      "detail": "No 429/403 after 15 rapid login attempts.",
+      "evidence": "Status codes returned: [405]",
+      "url": "https://url.dakshu.in/dashboard"
+    },
+    {
+      "module": "headers_audit",
+      "severity": "LOW",
+      "finding_type": "leaky_header",
+      "detail": "Server header present \u2014 Exposes web server software and version.",
+      "evidence": "Value: cloudflare",
+      "url": "https://url.dakshu.in"
+    }
+  ]
+}
